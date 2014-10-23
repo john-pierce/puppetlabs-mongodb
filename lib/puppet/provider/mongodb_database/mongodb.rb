@@ -7,7 +7,7 @@ Puppet::Type.type(:mongodb_database).provide(:mongodb, :parent => Puppet::Provid
 
   def self.instances
     require 'json'
-    dbs = JSON.parse mongo_eval('printjson(db.getMongo().getDBs())')
+    dbs = JSON.parse mongo('--quiet', '--eval', 'printjson(db.getMongo().getDBs())')
 
     dbs['databases'].collect do |db|
       new(:name   => db['name'],
@@ -25,12 +25,11 @@ Puppet::Type.type(:mongodb_database).provide(:mongodb, :parent => Puppet::Provid
     end
   end
 
-  def create
-    mongo_eval('db.dummyData.insert({"created_by_puppet": 1})', @resource[:name])
+  def create    mongo(@resource[:name], '--quiet', '--eval', "db.dummyData.insert({\"created_by_puppet\": 1})")
   end
 
   def destroy
-    mongo_eval('db.dropDatabase()', @resource[:name])
+    mongo(@resource[:name], '--quiet', '--eval', 'db.dropDatabase()')
   end
 
   def exists?
